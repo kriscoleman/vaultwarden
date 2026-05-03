@@ -1,0 +1,64 @@
+name: Replicated Release
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
+
+jobs:
+  create-release:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package Helm chart
+        id: package
+        run: |
+          helm dependency update charts/vaultwarden
+          helm package charts/vaultwarden -d /tmp/
+          echo "chart=$(ls /tmp/*.tgz)" >> "$GITHUB_OUTPUT"
+
+      - name: Extract chart version
+        id: chart-version
+        run: |
+          echo "version=$(grep '^version:' charts/vaultwarden/Chart.yaml | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - name: Create Replicated release on Unstable
+        id: release
+        uses: replicatedhq/replicated-actions/create-release@v1
+        with:
+          app-slug: ${{ secrets.REPLICATED_APP }}
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          chart: ${{ steps.package.outputs.chart }}
+          version: ${{ steps.chart-version.outputs.version }}
+          promote-channel: Unstable
+
+  promote-beta:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package Helm chart
+        id: package
+        run: |
+          helm dependency update charts/vaultwarden
+          helm package charts/vaultwarden -d /tmp/
+          echo "chart=$(ls /tmp/*.tgz)" >> "$GITHUB_OUTPUT"
+
+      - name: Extract chart version
+        id: chart-version
+        run: |
+          echo "version=$(grep '^version:' charts/vaultwarden/Chart.yaml | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - name: Create and promote release to Beta
+        uses: replicatedhq/replicated-actions/create-release@v1
+        with:
+          app-slug: ${{ secrets.REPLICATED_APP }}
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          chart: ${{ steps.package.outputs.chart }}
+          version: ${{ steps.chart-version.outputs.version }}
+          promote-channel: Beta

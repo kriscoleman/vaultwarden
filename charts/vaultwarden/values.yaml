@@ -1,0 +1,45 @@
+# -- Replicated SDK metadata. Auto-populated by the Replicated SDK at install time.
+global:
+  replicated:
+    customerName: ""
+    licenseID: ""
+    licenseType: ""
+    channelID: ""
+    channelName: ""
+    channelSequence: 0
+    releaseSequence: 0
+    releaseCreatedAt: ""
+    releaseNotes: ""
+    replicatedID: ""
+    appID: ""
+
+image:
+  repository: vaultwarden/server
+  tag: "1.33.2"
+  pullPolicy: IfNotPresent
+
+localRegistryPullSecret: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  host: ""
+
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+
+env:
+  DOMAIN: ""
+  ADMIN_TOKEN: ""
+  SIGNUPS_ALLOWED: "true"
+  DATABASE_URL: ""
+
+podSecurityContext:
+  runAsNonRoot: false
+
+securityContext: {}

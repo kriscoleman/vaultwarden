@@ -1,0 +1,2 @@
+export REPLICATED_APP=vaultwarden
+export REPLICATED_API_TOKEN=<your-vendor-api-token>
