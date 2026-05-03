@@ -99,6 +99,9 @@ deploy: customer cluster ## Deploy chart to CMX via Replicated registry
 	helm upgrade --install $(CHART_NAME) \
 		oci://registry.replicated.com/$(APP)/$(CHANNEL_LC)/$(CHART_NAME) \
 		--namespace $(NAMESPACE) \
+		--set global.replicated.licenseID="$$LICENSE_ID" \
+		--set global.replicated.channelName="$(CHANNEL)" \
+		--set global.replicated.appID="$(APP)" \
 		--wait \
 		--timeout 5m \
 	|| { echo "❌ Deploy failed"; exit 1; }
