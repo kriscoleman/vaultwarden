@@ -110,7 +110,7 @@ check: ## Verify all pods are running
 	@echo "🔍 Checking pod health..."
 	@kubectl get pods -n $(NAMESPACE) -o wide
 	@echo ""
-	@NOT_READY=$$(kubectl get pods -n $(NAMESPACE) --no-headers 2>/dev/null | grep -cv "Running\|Completed" || echo 0) && \
+	@NOT_READY=$$(kubectl get pods -n $(NAMESPACE) --no-headers 2>/dev/null | grep -cv "Running\|Completed" | tr -d " " || echo 0) && \
 	if [ "$$NOT_READY" -gt 0 ]; then \
 		echo "❌ $$NOT_READY pod(s) not ready"; \
 		kubectl get pods -n $(NAMESPACE) --no-headers | grep -v "Running\|Completed"; \
