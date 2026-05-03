@@ -42,13 +42,16 @@ deps: ## Update Helm dependencies
 	helm dependency update $(CHART_DIR)
 
 release: deps ## Package chart + create Replicated release on Unstable
+	@echo "📦 Packaging chart..."
+	@helm package $(CHART_DIR) --destination /tmp/
 	@echo "📦 Creating release on $(CHANNEL)..."
 	@replicated release create \
 		--app $(APP) \
-		--yaml-dir $(CHART_DIR) \
+		--chart /tmp/$(CHART_NAME)-$(CHART_VER).tgz \
 		--promote $(CHANNEL) \
 		--version $(CHART_VER) \
 		|| { echo "❌ Release failed"; exit 1; }
+	@rm -f /tmp/$(CHART_NAME)-$(CHART_VER).tgz
 	@echo "✅ Release $(CHART_VER) promoted to $(CHANNEL)"
 
 customer: ## Create or verify CMX validation customer
