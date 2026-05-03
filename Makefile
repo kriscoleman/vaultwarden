@@ -57,6 +57,7 @@ customer: ## Create or verify CMX validation customer
 		replicated customer create \
 			--app $(APP) \
 			--name "$(CUSTOMER)" \
+			--email "$(CUSTOMER)@factory.replicated.com" \
 			--channel $(CHANNEL) \
 			--type dev \
 			--expires-in 720h; \
@@ -79,8 +80,13 @@ cluster: ## Provision CMX k3s cluster
 
 deploy: customer cluster ## Deploy chart to CMX via Replicated registry
 	@echo "🔐 Logging into Replicated registry..."
-	@LICENSE_ID=$$(replicated customer ls --app $(APP) 2>/dev/null | grep "$(CUSTOMER)" | awk '{print $$1}') && \
-	CUSTOMER_EMAIL=$$(replicated customer inspect --customer $$LICENSE_ID --app $(APP) 2>/dev/null | grep EMAIL | awk '{print $$2}') && \
+	@CUSTOMER_JSON=$$(replicated customer ls --app $(APP) --output json 2>/dev/null | python3 -c "import json,sys; data=json.load(sys.stdin); c=[x for x in data if x.get('name')=='$(CUSTOMER)']; print(json.dumps(c[0]) if c else '')") && \
+	if [ -z "$$CUSTOMER_JSON" ]; then echo "❌ Customer $(CUSTOMER) not found"; exit 1; fi && \
+	LICENSE_ID=$$(echo "$$CUSTOMER_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('installationId',''))") && \
+	CUSTOMER_EMAIL=$$(echo "$$CUSTOMER_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('email',''))") && \
+	echo "  Customer: $(CUSTOMER)" && \
+	echo "  Email: $$CUSTOMER_EMAIL" && \
+	echo "  License: $${LICENSE_ID:0:10}..." && \
 	helm registry login registry.replicated.com \
 		--username "$$CUSTOMER_EMAIL" \
 		--password "$$LICENSE_ID" && \
