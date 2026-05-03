@@ -21,6 +21,8 @@ TTL          := 2h
 
 # Derived
 CHART_NAME   := $(shell grep '^name:' $(CHART_DIR)/Chart.yaml | awk '{print $$2}')
+# OCI registry requires lowercase channel name
+CHANNEL_LC   := $(shell echo $(CHANNEL) | tr A-Z a-z)
 CHART_VER    := $(shell grep '^version:' $(CHART_DIR)/Chart.yaml | awk '{print $$2}')
 
 .PHONY: validate release deploy check clean deps customer cluster teardown help
@@ -92,7 +94,7 @@ deploy: customer cluster ## Deploy chart to CMX via Replicated registry
 		--password "$$LICENSE_ID" && \
 	echo "📥 Installing $(CHART_NAME) from Replicated registry..." && \
 	helm upgrade --install $(CHART_NAME) \
-		oci://registry.replicated.com/$(APP)/$(CHANNEL)/$(CHART_NAME) \
+		oci://registry.replicated.com/$(APP)/$(CHANNEL_LC)/$(CHART_NAME) \
 		--namespace $(NAMESPACE) \
 		--wait \
 		--timeout 5m \
